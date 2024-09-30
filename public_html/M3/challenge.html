@@ -3,28 +3,48 @@
 
 <head>
     <title>Problem 1</title>
-    <meta charset="utf-8" />
     <script>
         window.addEventListener("load", () => {
             console.log("loaded via javascript");
             //TODO: add any extra onload processing you may need here (hint: you'll likely want to start here for the JS challenge)
+            document.querySelector('h1').tectContent=pageName;
         });
         function getCurrentSelection() {
             setTimeout(() => {
                 //added this delay here as some solutions may require it to update properly (i.e., click code may complete before the navigation changes)
                 //TODO: add code for processing the current selection (this section isn't mandatory for all solutions)
-
+                
                 //Note: likely you'll want to call updateCurrentPage towards the end
             }, 100);
         }
     </script>
     <style>
         /* TODO: make style edits here */
-        <ul>
-            <li>login</li>
-            <li>register</li>
-            <li>profile</li>
-            <li>logout</li>
+        nav ul {
+            list-style-type: none;
+            display: flex;
+            background-color: #8c981e;
+
+        }
+        nav li{
+            margin: 30px;
+            padding: 5px;
+        }
+        a:hover{
+            background-color: white;
+        }
+        h3~ul li{
+            list-style-type: '✓'
+        }
+        a{
+            text-transform: capitalize;
+        }
+        h1{
+        text-transform: capitalize;
+        }
+        body{
+            background-color: lightgray
+        }
 
     </style>
     <!-- make the necessary edits above this line -->
