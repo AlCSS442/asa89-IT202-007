@@ -7,8 +7,15 @@
         window.addEventListener("load", () => {
             console.log("loaded via javascript");
             //TODO: add any extra onload processing you may need here (hint: you'll likely want to start here for the JS challenge)
-            document.querySelector('h1').tectContent=pageName;
-        });
+            
+                const v = document.querySelectorAll("nav a");
+                for(let i=0; i<v.length; i++){
+                    v[i].addEventListener("click", function(event){
+                        const pageName = event.target.textContent;
+                        updateCurrentPage(pageName);
+                    });
+                }
+            });
         function getCurrentSelection() {
             setTimeout(() => {
                 //added this delay here as some solutions may require it to update properly (i.e., click code may complete before the navigation changes)
