@@ -28,9 +28,8 @@ function processBirds($birds) {
     $subset = []; // result array
     // Start edits
     // goal is to extract data into new array
-    $array = []; // initialize empty array first
     foreach ($birds as $bird){ //loop through each bird in the input array
-        $array[] = [
+        $subset[] = [
             'name' => $bird['name'],
             'color' => $bird['color'],
             'region' => $bird['region']
