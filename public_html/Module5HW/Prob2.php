@@ -29,6 +29,7 @@ function processCars($cars) {
     $processedCars = []; // result array
     $classic_age = 25; // don't change this value
     // Start edits
+    //10/20/2024 asa89  
     $currentYear = date('Y'); //dynamically finding the current year
    
     foreach ($cars as $car){

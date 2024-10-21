@@ -53,7 +53,7 @@ function joinArrays($users, $activities) {
     // associate arrays dont inherently have a join key
     //gameplan: iterate through the array(users) and then look up the corresponding data in the second array(activities)
     //initialize an empty associative array, will be used to store activities where the key is userId and the corresponding value is the activity
-        
+    //10/20/2024 asa89    
     foreach ($activities as $activity){
         $activityArray[$activity['userId']] = $activity['activity'];
     }

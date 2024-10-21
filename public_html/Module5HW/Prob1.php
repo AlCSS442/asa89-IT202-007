@@ -27,6 +27,7 @@ function processBirds($birds) {
     // TODO add logic here to create a new array with only name, color, and region
     $subset = []; // result array
     // Start edits
+    //10/20/2024 asa89  
     // goal is to extract data into new array
     foreach ($birds as $bird){ //loop through each bird in the input array
         $subset[] = [
