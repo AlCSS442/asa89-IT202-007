@@ -14,7 +14,8 @@ function getTotal($arr) {
     }
     
     //TODO do rounding stuff here (round to two decimals i.e., 0.10, 0.01, 0.00)
-    $total = round($total, 2);
+    $total = round($total, 2); //apparently this is wrong b/c it's a formatting question and it does not round correctly(drops the significant figure)
+                              //$total =sprintf("%0.2f", total);
     //end edits
     echo "The total is $total";
 }
