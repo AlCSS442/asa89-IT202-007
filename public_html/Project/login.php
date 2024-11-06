@@ -57,11 +57,13 @@ if (isset($_POST["email"]) && isset($_POST["password"])){
         $hasError = true;
     }
     //sanitize
-    $email = filter_var($email, FILTER_SANITIZE_EMAIL);
-    if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+    //$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+    $email = sanitize_email($email);
+    //validate
+    /* if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
         echo "Please enter a valid email <br>";
         $hasError = true;
-    }
+    } */
     
     if (strlen($password) < 8) {
         echo "Password too short";
