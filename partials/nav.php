@@ -35,6 +35,7 @@ require(__DIR__ . "/../lib/functions.php");
     <ul>
         <?php if (is_logged_in()) : ?>
             <li><a href="home.php">Home</a></li> <!-- In conditional html, location matters the most. Always want the login first and logout last -->
+            <li><a href="profile.php">Profile</a></li>
         <?php endif; ?>
         <?php if (!is_logged_in()) : ?>
             <li><a href="login.php">Login</a></li>
