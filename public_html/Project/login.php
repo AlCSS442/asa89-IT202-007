@@ -54,34 +54,50 @@ if (isset($_POST["email"]) && isset($_POST["password"])) {
     }
     if (!$hasError) {
         //flash("Welcome, $email");
-        //TODO 4
-        $db = getDB();
-        $stmt = $db->prepare("SELECT id, email, username, password from Users 
-        where email = :email");
-        try {
-            $r = $stmt->execute([":email" => $email]);
-            if ($r) {
-                $user = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($user) {
-                    $hash = $user["password"];
-                    unset($user["password"]);
-                    if (password_verify($password, $hash)) {
-                        //flash("Weclome $email");
-                        $_SESSION["user"] = $user; //sets our session data from db
-                        flash("Welcome, " . get_username());
-                        die(header("Location: home.php"));
-                    } else {
-                        flash("Invalid password");
-                    }
-                } else {
-                    flash("Email not found");
-                }
-            }
-        } catch (Exception $e) {
-            flash("<pre>" . var_export($e, true) . "</pre>");
-        }
-    }
-}
-?>
-<?php 
-require(__DIR__."/../../partials/flash.php");
+         //TODO 4
+         $db = getDB();
+         $stmt = $db->prepare("SELECT id, email, username, password from Users 
+         where email = :email");
+         try {
+             $r = $stmt->execute([":email" => $email]);
+             if ($r) {
+                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                 if ($user) {
+                     $hash = $user["password"];
+                     unset($user["password"]);
+                     if (password_verify($password, $hash)) {
+                         //flash("Weclome $email");
+                         $_SESSION["user"] = $user; //sets our session data from db
+                         try {
+                             //lookup potential roles
+                             $stmt = $db->prepare("SELECT Roles.name FROM Roles 
+                         JOIN UserRoles on Roles.id = UserRoles.role_id 
+                         where UserRoles.user_id = :user_id and Roles.is_active = 1 and UserRoles.is_active = 1");
+                             $stmt->execute([":user_id" => $user["id"]]);
+                             $roles = $stmt->fetchAll(PDO::FETCH_ASSOC); //fetch all since we'll want multiple
+                         } catch (Exception $e) {
+                             error_log(var_export($e, true));
+                         }
+                         //save roles or empty array
+                         if (isset($roles)) {
+                             $_SESSION["user"]["roles"] = $roles; //at least 1 role
+                         } else {
+                             $_SESSION["user"]["roles"] = []; //no roles
+                         }
+                         flash("Welcome, " . get_username());
+                         die(header("Location: home.php"));
+                     } else {
+                         flash("Invalid password");
+                     }
+                 } else {
+                     flash("Email not found");
+                 }
+             }
+         } catch (Exception $e) {
+             flash("<pre>" . var_export($e, true) . "</pre>");
+         }
+     }
+ }
+ ?>
+ <?php 
+ require(__DIR__."/../../partials/flash.php");
