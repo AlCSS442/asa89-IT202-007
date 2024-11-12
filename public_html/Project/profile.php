@@ -121,19 +121,53 @@ $username = get_username();
 
 <script>
     function validate(form) {
-        let pw = form.newPassword.value;
-        let con = form.confirmPassword.value;
-        let isValid = true;
-        //TODO add other client side validation....
+    let isValid = true; // Initialize isValid as true
+    let currentPassword = form.currentPassword.value;
+    let newPassword = form.newPassword.value;
+    let confirmPassword = form.confirmPassword.value;
 
-        //example of using flash via javascript
-        //find the flash container, create a new element, appendChild
-        if (pw !== con) {
-            flash("Password and Confirm password must match", "warning");
-            isValid = false;
-        }
-        return isValid;
+    // TODO: Add other client-side validation...
+
+    // Example of using flash via JavaScript:
+    // Find the flash container, create a new element, appendChild
+    if (!validateEmail(form)) {
+        isValid = false; // <-- refers to the variable in validate(), not in validateEmail function
     }
+    if (!validateUsername(form)) {
+        isValid = false;
+    }
+
+    // Password validation logic
+    if (currentPassword && newPassword && confirmPassword) {
+        let isValid = false;
+
+        // Check if the new password is valid
+        if (!isValidPassword(newPassword)) {
+            flash("Password too short", "danger");
+            isValid = false; 
+        }
+
+        // If no error, check if passwords match
+        if (!isValid) {
+            if (newPassword === confirmPassword) {
+
+                // Validate the form
+                if (!validatePassword(form)) {
+                    isValid = false;
+                }
+                if (!validateConfirmPassword(form)) {
+                    isValid = false;
+                }
+            } else {
+                flash("[Client] Passwords do not match", "danger");
+                isValid = false;
+            }
+        }
+    }
+
+    return isValid;
+}
+
 </script>
 <?php
 require_once(__DIR__ . "/../../partials/flash.php");
