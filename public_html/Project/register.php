@@ -45,6 +45,7 @@ reset_session();
             isValid = false;
         }
         if(!validatePassword(password)){
+            flash("[CLIENT] Password is too short.")
             isValid = false;
         }
 
