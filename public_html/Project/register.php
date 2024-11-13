@@ -25,8 +25,48 @@ reset_session();
     function validate(form) {
         //TODO 1: implement JavaScript validation
         //ensure it returns false for an error and true for success
+        //register simply checks all fields
+        let email = form.email.value;
+        let password = form.password.value;
+        let confirm = form.confirm.value;
+        let username = form.username.value;
 
-        return true;
+        if (email === "") {
+            flash("[CLIENT] Username/email must be filled out.")
+            isValid = false;
+        }
+        if(!validateEmail(email)){
+            flash("[CLIENT] Email is not valid.")
+            isValid = false;
+        }
+
+        if (password === "") {
+            flash("[CLIENT] Password must be filled in.")
+            isValid = false;
+        }
+        if(!validatePassword(password)){
+            isValid = false;
+        }
+
+        if (confirm === "") {
+            flash("[CLIENT] Confirm password must be filled out.");
+            isValid = false;
+        }
+        if (!validateConfirmPassword(password, confirm)) {
+            flash("[CLIENT] Passwords do not match.");
+                isValid = false;
+        }
+
+        if (username === "") {
+            flash("[Client] Username must be filled in.");
+            isValid = false;
+        }
+        if(!validateUsername(username)){
+            flash("[CLIENT] Username is not valid. Must be 3-30 characters long with special characters - or _")
+            isValid = false;
+        }
+        return isValid;
+
     }
 </script>
 <?php
@@ -34,12 +74,7 @@ reset_session();
 if (isset($_POST["email"]) && isset($_POST["password"]) && isset($_POST["confirm"])) {
     $email = se($_POST, "email", "", false);
     $password = se($_POST, "password", "", false);
-    $confirm = se(
-        $_POST,
-        "confirm",
-        "",
-        false
-    );
+    $confirm = se($_POST, "confirm", "", false);
     $username = se($_POST, "username", "", false);
     //TODO 3
     $hasError = false;
@@ -59,7 +94,7 @@ if (isset($_POST["email"]) && isset($_POST["password"]) && isset($_POST["confirm
         $hasError = true;
     }
     if (empty($password)) {
-        flash("password must not be empty", "danger");
+        flash("Password must not be empty", "danger");
         $hasError = true;
     }
     if (empty($confirm)) {
