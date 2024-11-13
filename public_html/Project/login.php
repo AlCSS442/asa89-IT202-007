@@ -24,9 +24,8 @@ require(__DIR__ . "/../../partials/nav.php");
         function validate(form) {
             let isValid = true;
             let password = form.password.value;
-
-            // Get the value of the email input field
             let email = form.email.value;
+
 
             if(email === ""){
                 flash("[Client] Username/email must be filled out.")
@@ -42,17 +41,20 @@ require(__DIR__ . "/../../partials/nav.php");
             if (email.includes('@')) {
                 // If it's an actual email, validate it...
                 if (!validateEmail(form)) {
+                    flash("[CLIENT] Not a valid email.")
                     isValid = false; 
                 }
             } else {
                 // If it's not an email, validate the username
-                if (!validateUsername(form)) {
+                if (!validateUsername(email)) {
+                    flash("[CLIENT] Invalid username.");
                     isValid = false; 
                 }
             }
 
             // If either email or username is valid, then validate the password
-            if (!validatePassword(form)) {
+            if (!validatePassword(password)) {
+                flash("[CLIENT] Password is not valid.")
                 isValid = false;
             }
             

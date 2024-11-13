@@ -32,34 +32,37 @@ reset_session();
         let username = form.username.value;
 
         if (email === "") {
-            flash("[Client] Username/email must be filled out.")
+            flash("[CLIENT] Username/email must be filled out.")
             isValid = false;
         }
-        if(!validateEmail(form)){
+        if(!validateEmail(email)){
+            flash("[CLIENT] Email is not valid.")
             isValid = false;
         }
 
         if (password === "") {
-            flash("[Client] Password must be filled in.")
+            flash("[CLIENT] Password must be filled in.")
             isValid = false;
         }
-        if(!validatePassword(form)){
+        if(!validatePassword(password)){
             isValid = false;
         }
 
         if (confirm === "") {
-            flash("[Client] Confirm password must be filled out.");
+            flash("[CLIENT] Confirm password must be filled out.");
             isValid = false;
         }
-        if(!validateConfirmPassword(form)){
-            isValid = false;
+        if (!validateConfirmPassword(password, confirm)) {
+            flash("[CLIENT] Passwords do not match.");
+                isValid = false;
         }
 
         if (username === "") {
             flash("[Client] Username must be filled in.");
             isValid = false;
         }
-        if(!validateUsername(form)){
+        if(!validateUsername(username)){
+            flash("[CLIENT] Username is not valid. Must be 3-30 characters long with special characters - or _")
             isValid = false;
         }
         return isValid;

@@ -121,52 +121,49 @@ $username = get_username();
 
 <script>
     function validate(form) {
-    let isValid = true; // Initialize isValid as true
-    let currentPassword = form.currentPassword.value;
-    let newPassword = form.newPassword.value;
-    let confirmPassword = form.confirmPassword.value;
+        let isValid = true; // Initialize isValid as true
+        let currentPassword = form.currentPassword.value;
+        let newPassword = form.newPassword.value;
+        let confirmPassword = form.confirmPassword.value;
+        let email = form.email.value;
+        let username = form.username.value;
 
-    // TODO: Add other client-side validation...
+        // TODO: Add other client-side validation...
 
-    // Example of using flash via JavaScript:
-    // Find the flash container, create a new element, appendChild
-    if (!validateEmail(form)) {
-        isValid = false; // <-- refers to the variable in validate(), not in validateEmail function
-    }
-    if (!validateUsername(form)) {
-        isValid = false;
-    }
-
-    // Password validation logic
-    if (currentPassword && newPassword && confirmPassword) {
-        let isValid = false;
-
-        // Check if the new password is valid
-        if (!isValidPassword(newPassword)) {
-            flash("Password too short", "danger");
-            isValid = false; 
+        // Example of using flash via JavaScript:
+        // Find the flash container, create a new element, appendChild
+        if (!validateEmail(email)) {
+            flash("[CLIENT] Not a valid email.")
+            isValid = false;
+        }
+        if (!validateUsername(username)) {
+            flash("[CLIENT] Not a valid username.")
+            isValid = false;
         }
 
-        // If no error, check if passwords match
-        if (!isValid) {
-            if (newPassword === confirmPassword) {
+        // Password validation logic
+        if (currentPassword && newPassword && confirmPassword) {
+            
+            // Check if the new password is valid
+            if (!validatePassword(newPassword)) {
+                flash("[CLIENT] Password too short");
+                isValid = false;
+            }
+            // Validate the form
+            if (!validatePassword(currentPassword)) {
+                flash("[CLIENT] There was a problem.")
+                isValid = false;
+            }
 
-                // Validate the form
-                if (!validatePassword(form)) {
-                    isValid = false;
-                }
-                if (!validateConfirmPassword(form)) {
-                    isValid = false;
-                }
-            } else {
-                flash("[Client] Passwords do not match", "danger");
+            if (!validateConfirmPassword(newPassword, confirmPassword)) {
+                flash("[CLIENT] Passwords do not match.");
                 isValid = false;
             }
         }
-    }
 
+    
     return isValid;
-}
+    }
 
 </script>
 <?php
