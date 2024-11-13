@@ -21,7 +21,6 @@ require(__DIR__ . "/../../partials/nav.php");
 
         //so I created helper functions and am just going to call them here
 
-        function validate(form) {
             let isValid = true;
             let password = form.password.value;
             let email = form.email.value;
@@ -40,11 +39,12 @@ require(__DIR__ . "/../../partials/nav.php");
             // Check if the value contains '@', since it would tell me if it's an email or username
             if (email.includes('@')) {
                 // If it's an actual email, validate it...
-                if (!validateEmail(form)) {
+                if (!validateEmail(email)) {
                     flash("[CLIENT] Not a valid email.")
                     isValid = false; 
                 }
-            } else {
+            } 
+            else {
                 // If it's not an email, validate the username
                 if (!validateUsername(email)) {
                     flash("[CLIENT] Invalid username.");
