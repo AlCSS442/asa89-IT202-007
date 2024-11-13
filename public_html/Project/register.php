@@ -59,7 +59,7 @@ reset_session();
         }
 
         if (username === "") {
-            flash("[Client] Username must be filled in.");
+            flash("[CLIENT] Username must be filled in.");
             isValid = false;
         }
         if(!validateUsername(username)){
