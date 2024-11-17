@@ -4,7 +4,7 @@ require(__DIR__ . "/../../partials/nav.php");
 $result = [];
 $cveId = '';
 if (isset($_GET["cveId"])) {
-    $data = [ //1. replace data with data you'll be retrieving from my API
+    $data = [ //1.  replace data with data you'll be retrieving from my API
         "resultsPerPage" => 5,
         "startIndex" => 0,
         "cveId" => $_GET["cveId"]
