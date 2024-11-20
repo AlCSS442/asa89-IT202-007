@@ -9,10 +9,11 @@ if (isset($_GET["cveId"])) {
         "startIndex" => 0,
         "cveId" => $_GET["cveId"]
     ];
+    $cveId = $_GET["cveId"];
     $endpoint = "https://services.nvd.nist.gov/rest/json/cves/2.0"; //2. REPLACE THE ENDPOINT
     $isRapidAPI = false;
-    
-    
+
+
     $result = get($endpoint, "CV_API_KEY", $data, $isRapidAPI);
     //example of cached data to save the quotas, don't forget to comment out the get() if using the cached data for testing
     /* $result = ["status" => 200, "response" => '{
@@ -36,26 +37,78 @@ if (isset($_GET["cveId"])) {
         $result = [];
     }
 }
+
+$db = getDB();
+$query = "INSERT INTO 'Project-cveId'";
+foreach($vulnerability as $vuln){
+    
+}
+$db->prepare();
+
 ?>
 <div class="container-fluid">
     <h1>CVE Info</h1>
     <p>Here is the CVE information for the CVE ID: <?php echo $cveId; ?></p>
     <form>
-        <div class = "row">
+        <div class="row">
             <label>CVE ID</label>
             <input name="cveId" />
             <input type="submit" value="Fetch CVE Info" />
-        </div> 
+        </div>
     </form>
     <div class="row">
         <?php if (isset($result['vulnerabilities']) && !empty($result['vulnerabilities'])) : ?>
-                <pre>
-                    <?php
-                    var_export($result['vulnerabilities']) ?>
-                </pre>
-            <?php else :  ?>
-                <p> No CVE data found or failed to fetch data </p>
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>CVE ID</th>
+                        <th>Description</th>
+                        <th>Published Date</th>
+                        <th>Severity</th>
+                        <th>References</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($result['vulnerabilities'] as $vuln) : ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($vuln['cve']['id'] ?? 'N/A'); ?></td>
+                            <td>
+                                <?php
+                                // Display the first description in English
+                                $descriptions = $vuln['cve']['descriptions'] ?? [];
+                                $description = 'No description available';
+                                foreach ($descriptions as $desc) {
+                                    
+                                        $description = $desc['value'];
+                                        break;
+                                    }
+                                
+                                echo htmlspecialchars($description);
+                                ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($vuln['cve']['published'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($vuln['cve']['metrics']['cvssMetricV31'][0]['cvssData']['baseSeverity'] ?? 'N/A'); ?></td>
+                            <td>
+                                <?php
+                                // Display references as clickable links
+                                $references = $vuln['cve']['references'] ?? [];
+                                if (!empty($references)) {
+                                    foreach ($references as $ref) {
+                                        echo '<a href="' . htmlspecialchars($ref['url']) . '" target="_blank">' . htmlspecialchars($ref['url']) . '</a><br>';
+                                    }
+                                } else {
+                                    echo 'No references available';
+                                }
+                                ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else : ?>
+            <p>No CVE data found or failed to fetch data.</p>
         <?php endif; ?>
+
     </div>
 </div>
 <?php

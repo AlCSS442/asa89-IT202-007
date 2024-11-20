@@ -40,7 +40,7 @@ function _sendRequest($url, $key, $data = [], $method = 'GET', $isRapidAPI = fal
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => "", // Specify encoding if known
         CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
+        CURLOPT_TIMEOUT => 60,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => $method,
         CURLOPT_HTTPHEADER => $headers,
