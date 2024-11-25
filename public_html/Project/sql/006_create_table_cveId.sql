@@ -1,13 +1,12 @@
 CREATE TABLE IF NOT EXISTS `Project-cveId` (
     `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `cveId` VARCHAR(30) NOT NULL,
-    `Description` VARCHAR(800) NOT NULL,
-    `Published Date Severity` VARCHAR(30) NOT NULL,
-    `References` VARCHAR(800) NOT NULL,
-
+    `cveId` VARCHAR(50) NOT NULL,  -- Increased size for cveId
+    `description` TEXT NOT NULL,  -- Lowercase column name
+    `published_date` VARCHAR(100) NOT NULL,  -- Fixed column name and size
+    `references` VARCHAR(1000) NOT NULL,  -- Increased size for references
 
     `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `modified` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    UNIQUE('cveId')
-)
+
+    UNIQUE(cveId)  -- Corrected UNIQUE constraint
+);
