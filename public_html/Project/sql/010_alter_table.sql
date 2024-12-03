@@ -1,0 +1,4 @@
+ALTER TABLE `Project-cveId`
+ADD COLUMN `lastModified` DATETIME NOT NULL,
+ADD COLUMN `vulnStatus` VARCHAR(50) NOT NULL,
+ADD COLUMN `sourceIdentifier` VARCHAR(255) NOT NULL;

@@ -8,76 +8,76 @@ $db = getDB();
 if (isset($_GET["cveId"])) {
     $cveId = $_GET["cveId"]; // Ensure cveId is captured first
     $data = [ // Data to be retrieved from the API
-        "resultsPerPage" => 5,
         "startIndex" => 0,
         "resultsPerPage" => 10,
         "cveId" => $cveId
     ];
-    
-    //using cached data by turning it into a string instead of making a real API request for testing
-    $cachedData = '{
-        "resultsPerPage": 1,
-        "startIndex": 0,
-        "totalResults": 1,
-        "format": "NVD_CVE",
-        "version": "2.0",
-        "timestamp": "2024-11-25T20:34:16.170",
-        "vulnerabilities": [
-            {
-                "cve": {
-                    "id": "CVE-2021-30900",
-                    "sourceIdentifier": "product-security@apple.com",
-                    "published": "2021-08-24T19:15:18.083",
-                    "lastModified": "2024-11-21T06:04:55.677",
-                    "vulnStatus": "Modified",
-                    "descriptions": [
-                        {
-                            "lang": "en",
-                            "value": "Apple macOS vulnerability in WebKit"
-                        }
-                    ],
-                    "metrics": {
-                        "cvssMetricV31": [
-                            {
-                                "cvssData": {
-                                    "baseScore": 7.8,
-                                    "baseSeverity": "High"
-                                }
-                            }
-                        ]
-                    },
-                    "references": [
-                        {
-                            "url": "https://support.apple.com/en-us/HT213717"
-                        }
-                    ]
-                }
-            }
-        ]
-    }';
-    // Decode the cached JSON string into a PHP associative array
-    $result = json_decode($cachedData, true);
 
     $endpoint = "https://services.nvd.nist.gov/rest/json/cves/2.0"; // Endpoint for fetching CVE data
     $isRapidAPI = false;
 
     // Fetching CVE data from API
-    //$result = get($endpoint, "CV_API_KEY", $data, $isRapidAPI);
-    error_log("API Response: " . var_export($result, true));
+    $result = get($endpoint, "CV_API_KEY", $data, $isRapidAPI);
+
+    // simulated result (can simply comment this out and uncomment the get() above)
+    /*$result = ["status" => 200, "response" => ' {
+          "resultsPerPage": 1,
+          "startIndex": 0,
+          "totalResults": 1,
+          "format": "NVD_CVE",
+          "version": "2.0",
+          "timestamp": "2024-11-25T20:34:16.170",
+          "vulnerabilities": [
+            {
+              "cve": {
+                "id": "CVE-2021-30900",
+                "sourceIdentifier": "product-security@apple.com",
+                "published": "2021-08-24T19:15:18.083",
+                "lastModified": "2024-11-21T06:04:55.677",
+                "vulnStatus": "Modified",
+                "descriptions": [
+                  {
+                    "lang": "en",
+                    "value": "Apple macOS vulnerability in WebKit"
+                  }
+                ],
+                "metrics": {
+                  "cvssMetricV31": [
+                    {
+                      "cvssData": {
+                        "baseScore": 7.8,
+                        "baseSeverity": "High"
+                      }
+                    }
+                  ]
+                },
+                "references": [
+                  {
+                    "url": "https://support.apple.com/en-us/HT213717"
+                  }
+                ]
+              }
+            }
+          ]
+        }'];
+    error_log("API Response RAW: " . var_export($result, true));
+    */
 
     if (se($result, "status", 400, false) == 200 && isset($result["response"])) {
+        error_log("has status");
         $result = json_decode($result["response"], true);
     } else {
         // Log if the API response isn't as expected
         error_log("API call failed or response not as expected.");
         $result = [];
     }
-    error_log("API Response: " . var_export($result, true));
+    error_log("API Response Decoded: " . var_export($result, true));
+    
     // Inserting or updating database records for CVE data (only after fetching the result)
     if (isset($result['vulnerabilities'])) {
         foreach ($result['vulnerabilities'] as $vuln) {
             // Extract data from API response
-            $description = ''; 
+            $description = '';
             $descriptions = $vuln['cve']['descriptions'] ?? [];
             foreach ($descriptions as $desc) {
                 $description = $desc['value'];
@@ -92,10 +92,15 @@ if (isset($_GET["cveId"])) {
                 $references .= $ref['url'] . '; ';  // Concatenate URLs with a semicolon separator
             }
 
+            // Extract the new fields
+            $lastModified = $vuln['cve']['lastModified'] ?? null;
+            $vulnStatus = $vuln['cve']['vulnStatus'] ?? 'N/A';
+            $sourceIdentifier = $vuln['cve']['sourceIdentifier'] ?? 'N/A';
+
             // Prepare the SELECT query to check if the CVE already exists
-            $query = "SELECT * FROM `Project-cveId` WHERE cve_id = :cve_id";
+            $query = "SELECT * FROM `Project-cveId` WHERE cveId = :cveId";
             $stmt = $db->prepare($query);
-            $stmt->bindParam(':cve_id', $vuln['cve']['id']);
+            $stmt->bindParam(':cveId', $vuln['cve']['id']);
             $stmt->execute();
 
             $existing = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -104,29 +109,37 @@ if (isset($_GET["cveId"])) {
             if ($existing) {
                 // Update the record if it exists
                 $updateQuery = "UPDATE `Project-cveId` SET 
-                                description = :description, 
-                                published_date = :published_date, 
-                                severity = :severity, 
-                                references = :references, 
-                                modified = NOW() 
-                                WHERE cve_id = :cve_id";
+                                `description` = :description, 
+                                `published_date` = :published_date, 
+                                `severity` = :severity, 
+                                `references` = :references,
+                                `lastModified` = :lastModified,
+                                `vulnStatus` = :vulnStatus,
+                                `sourceIdentifier` = :sourceIdentifier
+                                WHERE cveId = :cveId";
                 $updateStmt = $db->prepare($updateQuery);
-                $updateStmt->bindParam(':cve_id', $vuln['cve']['id']);
-                $updateStmt->bindParam(':description', $description);
-                $updateStmt->bindParam(':published_date', $published_date);
-                $updateStmt->bindParam(':severity', $severity);
-                $updateStmt->bindParam(':references', $references);
+                $updateStmt->bindValue(':cveId', $vuln['cve']['id']);
+                $updateStmt->bindValue(':description', $description);
+                $updateStmt->bindValue(':published_date', $published_date);
+                $updateStmt->bindValue(':severity', $severity);
+                $updateStmt->bindValue(':references', $references);
+                $updateStmt->bindValue(':lastModified', $lastModified);
+                $updateStmt->bindValue(':vulnStatus', $vulnStatus);
+                $updateStmt->bindValue(':sourceIdentifier', $sourceIdentifier);
                 $updateStmt->execute();
             } else {
                 // Insert new record if it doesn't exist
-                $insertQuery = "INSERT INTO `Project-cveId` (cve_id, description, published_date, severity, references, created, modified)
-                                VALUES (:cve_id, :description, :published_date, :severity, :references, NOW(), NOW())";
+                $insertQuery = "INSERT INTO `Project-cveId` (`cveId`, `description`, `published_date`, `severity`, `references`, `lastModified`, `vulnStatus`, `sourceIdentifier`)
+                                VALUES (:cveId, :description, :published_date, :severity, :references, :lastModified, :vulnStatus, :sourceIdentifier)";
                 $insertStmt = $db->prepare($insertQuery);
-                $insertStmt->bindParam(':cve_id', $vuln['cve']['id']);
-                $insertStmt->bindParam(':description', $description);
-                $insertStmt->bindParam(':published_date', $published_date);
-                $insertStmt->bindParam(':severity', $severity);
-                $insertStmt->bindParam(':references', $references);
+                $insertStmt->bindValue(':cveId', $vuln['cve']['id']);
+                $insertStmt->bindValue(':description', $description);
+                $insertStmt->bindValue(':published_date', $published_date);
+                $insertStmt->bindValue(':severity', $severity);
+                $insertStmt->bindValue(':references', $references);
+                $insertStmt->bindValue(':lastModified', $lastModified);
+                $insertStmt->bindValue(':vulnStatus', $vulnStatus);
+                $insertStmt->bindValue(':sourceIdentifier', $sourceIdentifier);
                 $insertStmt->execute();
             }
         }
@@ -156,6 +169,9 @@ if (isset($_GET["cveId"])) {
                         <th>Published Date</th>
                         <th>Severity</th>
                         <th>References</th>
+                        <th>Last Modified</th>
+                        <th>Vulnerability Status</th>
+                        <th>Source Identifier</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -190,6 +206,9 @@ if (isset($_GET["cveId"])) {
                                 }
                                 ?>
                             </td>
+                            <td><?php echo htmlspecialchars($vuln['cve']['lastModified'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($vuln['cve']['vulnStatus'] ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($vuln['cve']['sourceIdentifier'] ?? 'N/A'); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
