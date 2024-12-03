@@ -5,8 +5,21 @@ $result = [];
 $cveId = '';
 $db = getDB();
 
-if (isset($_GET["cveId"])) {
+if (isset($_GET["cveId"])) { 
     $cveId = $_GET["cveId"]; // Ensure cveId is captured first
+
+    // Validation for cve-id format
+    if (!preg_match('/CVE-\d{4}-\d{4,7}/', $cveId)) {
+        echo "<p>Invalid CVE ID format. Please provide a valid CVE ID.</p>";
+    } else {
+        // Process valid CVE ID here
+        // For example, you can display relevant information about the CVE ID.
+        echo "<p>Valid CVE ID: $cveId</p>";
+    }
+} else {
+    echo "<p>No CVE ID provided.</p>";
+}
+
     $data = [ // Data to be retrieved from the API
         "startIndex" => 0,
         "resultsPerPage" => 10,
@@ -72,7 +85,7 @@ if (isset($_GET["cveId"])) {
         $result = [];
     }
     error_log("API Response Decoded: " . var_export($result, true));
-    
+
     // Inserting or updating database records for CVE data (only after fetching the result)
     if (isset($result['vulnerabilities'])) {
         foreach ($result['vulnerabilities'] as $vuln) {
@@ -127,26 +140,31 @@ if (isset($_GET["cveId"])) {
                 $updateStmt->bindValue(':vulnStatus', $vulnStatus);
                 $updateStmt->bindValue(':sourceIdentifier', $sourceIdentifier);
                 $updateStmt->execute();
-            } else {
-                // Insert new record if it doesn't exist
-                $insertQuery = "INSERT INTO `Project-cveId` (`cveId`, `description`, `published_date`, `severity`, `references`, `lastModified`, `vulnStatus`, `sourceIdentifier`)
-                                VALUES (:cveId, :description, :published_date, :severity, :references, :lastModified, :vulnStatus, :sourceIdentifier)";
-                $insertStmt = $db->prepare($insertQuery);
-                $insertStmt->bindValue(':cveId', $vuln['cve']['id']);
-                $insertStmt->bindValue(':description', $description);
-                $insertStmt->bindValue(':published_date', $published_date);
-                $insertStmt->bindValue(':severity', $severity);
-                $insertStmt->bindValue(':references', $references);
-                $insertStmt->bindValue(':lastModified', $lastModified);
-                $insertStmt->bindValue(':vulnStatus', $vulnStatus);
-                $insertStmt->bindValue(':sourceIdentifier', $sourceIdentifier);
-                $insertStmt->execute();
+            } 
+            else {
+                // Insert new record if it doesn't exist, using helper function 
+                $data = [
+                    'cveId' => $vuln['cve']['id'],
+                    'description' => $description,
+                    'published_date' => $published_date,
+                    'severity' => $severity,
+                    'references' => $references,
+                    'lastModified' => $lastModified,
+                    'vulnStatus' => $vulnStatus,
+                    'sourceIdentifier' => $sourceIdentifier
+                ];
+
+                try {
+                    $result = insert('Project-cveId', $data, ['debug' => true]);
+                    error_log("Inserted CVE record: " . json_encode($result));
+                } catch (Exception $e) {
+                    error_log("Failed to insert CVE record: " . $e->getMessage());
+                }
             }
         }
     } else {
         error_log("No valid CVE data found in the API response.");
     }
-}
 ?>
 
 <div class="container-fluid">
