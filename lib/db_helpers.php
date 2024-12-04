@@ -62,7 +62,7 @@ function insert($table_name, $data, $opts = ["debug" => false, "update_duplicate
     $sortedKeys = array_keys($firstItem);
     sort($sortedKeys); // Sort keys to ensure consistency
     // uncomment to fix issues when using column names that are reserved keywords
-    //$sortedKeys = array_map(fn ($key) => "`$key`", $sortedKeys);
+    $sortedKeys = array_map(fn ($key) => "`$key`", $sortedKeys);
     $columns = join(", ", $sortedKeys);
     
     $valuesClause = [];

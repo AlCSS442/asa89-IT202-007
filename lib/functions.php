@@ -29,4 +29,15 @@ require(__DIR__ . "/api_helper.php");
 require(__DIR__ . "/render_functions.php");
 
 require(__DIR__ . "/db_helpers.php");
+
+require(__DIR__ . "/fetch_cve_data.php");
+
+require(__DIR__ . "/is_valid_cve_id.php");
+
+require(__DIR__ . "/extract_vulnerability_details.php");
+
+require(__DIR__ . "/cve_exists.php");
+
+require(__DIR__ . "/update_cve_record.php");
+
 ?>
