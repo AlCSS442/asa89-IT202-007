@@ -36,3 +36,8 @@ function validatePassword(password){
 function validateConfirmPassword(password,confirm) {
     return password===confirm;
 }
+
+function isValidURL(str) {
+    const pattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-]*)*$/;
+    return pattern.test(str);
+}
