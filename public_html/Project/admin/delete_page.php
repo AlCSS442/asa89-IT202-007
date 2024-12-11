@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . "/../../partials/nav.php");
+require(__DIR__ . "/../../../partials/nav.php");
 
 // Check if the user is logged in and has admin privileges
 if (!has_role("Admin")) {

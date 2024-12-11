@@ -1,120 +1,107 @@
 <?php
-require_once(__DIR__ . "/../../partials/nav.php");
+// Include the necessary files
+require(__DIR__ . "/../../../partials/nav.php");
 
-// Check if the user is logged in and has admin privileges
+// Check if the user has admin privileges
 if (!has_role("Admin")) {
     flash("You don't have permission to view this page", "warning");
     die(header("Location: $BASE_PATH" . "/home.php"));
 }
 
-$cveId = se($_GET, "cveId", "", false); // Get the CVE ID from the URL parameter
+$id = se($_GET, "id", "", false); // Get the CVE ID from the URL parameter
 
-// Check if a CVE ID is provided
-if (empty($cveId)) {
-    flash("CVE ID is required to edit the record.");
-    die("list_cve.php"); // Redirect back to the list page
-}
-
-// Fetch the existing data for the given CVE ID
-$sql = "SELECT * FROM `Project-cveId` WHERE cveId = :cveId LIMIT 1";
-$params = [":cveId" => $cveId];
-$db = getDB();
-$cveData = null;
-
-try {
-    $stmt = $db->prepare($sql);
-    $stmt->execute($params);
-    $cveData = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch (Exception $e) {
-    error_log(var_export($e, true));
-    flash("Failed to retrieve data for this CVE.");
-    die("list_cve.php");
-}
-
-if (!$cveData) {
-    flash("CVE ID not found.");
-    die("list_cve.php"); // Redirect if CVE ID does not exist
-}
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Handle the form submission
-    $description = se($_POST, "description", "", false);
-    $severity = se($_POST, "severity", "", false);
-    $cvss = se($_POST, "cvss", "", false);
-    $vendor = se($_POST, "vendor", "", false);
-    $vulnStatus = se($_POST, "vulnStatus", "", false);
-    
-    // Validation (basic)
-    if (empty($description) || empty($severity)) {
-        flash("Please fill in all the required fields.");
-    } else {
-        // Update the record
-        $updateSql = "UPDATE `Project-cveId` SET description = :description, severity = :severity, 
-                      cvss = :cvss, vendor = :vendor, vulnStatus = :vulnStatus
-                      WHERE cveId = :cveId";
-        $updateParams = [
-            ":description" => $description,
-            ":severity" => $severity,
-            ":cvss" => $cvss,
-            ":vendor" => $vendor,
-            ":vulnStatus" => $vulnStatus,
-            ":cveId" => $cveId
-        ];
-
-        try {
-            $stmt = $db->prepare($updateSql);
-            $stmt->execute($updateParams);
-            flash("CVE updated successfully.");
-            die("view_cve.php?cveId=" . $cveId); // Redirect to view page or list page
-        } catch (Exception $e) {
-            error_log(var_export($e, true));
-            flash("Error updating the CVE.");
+if (isset($_POST["description"])) {
+    // Clean and sanitize POST data
+    $quote = [];
+    foreach ($_POST as $k => $v) {
+        if (!in_array($k, ["description", "severity", "cvss", "vendor", "vulnStatus"])) {
+            unset($_POST[$k]);
         }
+        $quote[$k] = $v; // Add valid fields to the quote array
+    }
+
+    // Prepare the SQL query for updating the CVE record
+    $db = getDB();
+    $query = "UPDATE `Project-cveId` SET ";
+    $params = [];
+    foreach ($quote as $k => $v) {
+        if ($params) {
+            $query .= ",";
+        }
+        $query .= "$k=:$k";
+        $params[":$k"] = $v;
+    }
+
+    // Add the CVE ID to the WHERE clause
+    $query .= " WHERE id = :id";
+    $params[":id"] = $id;
+
+    try {
+        // Execute the query
+        $stmt = $db->prepare($query);
+        $stmt->execute($params);
+        flash("CVE updated successfully", "success");
+    } catch (PDOException $e) {
+        error_log("Something went wrong with the query: " . var_export($e, true));
+        flash("An error occurred while updating the CVE.", "danger");
     }
 }
 
+$cveData = [];
+if (!empty($id)) {
+    // Fetch existing CVE data
+    $db = getDB();
+    $query = "SELECT id, `description`, severity, cvss, vendor, vulnStatus FROM `Project-cveId` WHERE id = :id";
+    try {
+        $stmt = $db->prepare($query);
+        $stmt->execute([":id" => $id]);
+        $r = $stmt->fetch();
+        if ($r) {
+            $cveData = $r;
+        }
+    } catch (PDOException $e) {
+        error_log("Error fetching record: " . var_export($e, true));
+        flash("Error fetching CVE data", "danger");
+    }
+} else {
+    flash("Invalid CVE ID passed", "danger");
+    die(header("Location: " . get_url("admin/basic_list_page.php")));
+}
+
+if ($cveData) {
+    $form = [
+        ["type" => "text", "name" => "cveId", "placeholder" => "CVE ID", "label" => "CVE ID", "rules" => ["required" => "required"]],
+        ["type" => "textarea", "name" => "description", "placeholder" => "Description", "label" => "Description", "rules" => ["required" => "required"]],
+        ["type" => "text", "name" => "severity", "placeholder" => "Severity", "label" => "Severity", "rules" => ["required" => "required"]],
+        ["type" => "number", "name" => "cvss", "placeholder" => "CVSS Score", "label" => "CVSS Score", "rules" => ["required" => "required"]],
+        ["type" => "text", "name" => "vendor", "placeholder" => "Vendor", "label" => "Vendor", "rules" => ["required" => "required"]],
+        ["type" => "text", "name" => "vulnStatus", "placeholder" => "Vulnerability Status", "label" => "Vulnerability Status", "rules" => ["required" => "required"]],
+    ];
+
+    $keys = array_keys($cveData);
+    foreach ($form as $k => $v) {
+        if (in_array($v["name"], $keys)) {
+            $form[$k]["value"] = $cveData[$v["name"]];
+        }
+    }
+}
 ?>
 
 <div class="container-fluid">
-    <h1>Edit CVE</h1>
+    <h3>Edit CVE</h3>
+    <div>
+        <a href="<?php echo get_url("admin/basic_list_page.php"); ?>" class="btn btn-secondary">Back</a>
+    </div>
     <form method="POST">
-        <div class="row">
-            <div class="col">
-                <?php render_input(["name" => "cveId", "label" => "CVE ID", "value" => $cveData["cveId"], "readonly" => true]); ?>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <?php render_input(["name" => "description", "label" => "Description", "value" => $cveData["description"], "type" => "textarea"]); ?>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <?php render_input(["name" => "severity", "label" => "Severity", "value" => $cveData["severity"]]); ?>
-            </div>
-            <div class="col">
-                <?php render_input(["name" => "cvss", "label" => "CVSS Score", "value" => $cveData["cvss"]]); ?>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <?php render_input(["name" => "vendor", "label" => "Vendor", "value" => $cveData["vendor"]]); ?>
-            </div>
-            <div class="col">
-                <?php render_input(["name" => "vulnStatus", "label" => "Vulnerability Status", "value" => $cveData["vulnStatus"]]); ?>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <?php render_button(["text" => "Update", "type" => "submit"]); ?>
-            </div>
-            <div class="col">
-                <a href="list_cve.php" class="btn btn-secondary">Cancel</a>
-            </div>
-        </div>
+        <?php 
+        foreach ($form as $k => $v) {
+            render_input($v);
+        }
+        render_button(["text" => "Update", "type" => "submit"]);
+        ?>
     </form>
 </div>
 
 <?php
-require_once(__DIR__ . "/../../partials/flash.php");
+require_once(__DIR__ . "/../../../partials/flash.php");
 ?>

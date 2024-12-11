@@ -1,7 +1,7 @@
 <?php
 //basic list page of data from the DB
 
-require_once(__DIR__ . "/../../partials/nav.php");
+require(__DIR__ . "/../../../partials/nav.php");
 
 if (!has_role("Admin")) {
     flash("You don't have permission to view this page", "warning");
@@ -12,8 +12,10 @@ if (!has_role("Admin")) {
 $cveId = se($_GET, "cveId", "", false);
 $description = se($_GET, "description", "", false);
 $severity = se($_GET, "severity", "", false);
-$vendor = se($_GET, "vendor", "", false);
-$cvss = se($_GET, "cvss", "", false);
+$references = se($_GET, "references", "", false);
+$vulnStatus = se($_GET, "vulnStatus", "", false);
+$sourceIdentifier = se($_GET, "sourceIdentifier", "", false);
+$published_date = se($_GET, "published_date", "", false);
 $order = se($_GET, "order", "desc", false);
 
 // Pagination limit
@@ -26,7 +28,7 @@ if (isset($_GET["limit"]) && !is_nan($_GET["limit"])) {
 }
 
 // Column map for sorting
-$columns = ["cveId", "published_date", "severity", "cvss", "vendor"];
+$columns = ["cveId", "description", "severity", "references", "vulnStatus", "sourceIdentifier", "published_date"];
 $columnMap = array_map(function ($v) {
     return [$v => $v];
 }, $columns);
@@ -36,28 +38,27 @@ if (!in_array($order, ["asc", "desc"])) {
     $order = "desc";
 }
 
-$sql = "SELECT * FROM `Project-cveId` WHERE 1=1"; // Used to easily append other conditions
+$sql = "SELECT * FROM `Project-cveId` WHERE id=:id";
 $params = [];
-if (!empty($cveId)) {
-    $sql .= " AND cveId LIKE :cveId";
-    $params[":cveId"] = "%$cveId%";
+if (!empty($id)) {
+    $sql .= " AND id LIKE :id";  // Add a condition to filter the 'id'
+    $params[":id"] = "%$id%";  // Add the parameter for binding
 }
-if (!empty($description)) {
-    $sql .= " AND description LIKE :description";
-    $params[":description"] = "%$description%";
+
+try {
+    // Prepare the statement
+    $stmt = $db->prepare($sql);
+
+    // Execute the query with the parameters
+    $stmt->execute([":id" => $id]); // Binding the 'id' parameter directly in execute
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);  // Fetch the results
+
+    // Process the results...
+} catch (PDOException $e) {
+    error_log("Error executing query: " . $e->getMessage());
+    flash("An error occurred while fetching data", "danger");
 }
-if (!empty($severity)) {
-    $sql .= " AND severity = :severity";
-    $params[":severity"] = $severity;
-}
-if (!empty($cvss)) {
-    $sql .= " AND cvss = :cvss";
-    $params[":cvss"] = $cvss;
-}
-if (!empty($vendor)) {
-    $sql .= " AND vendor LIKE :vendor";
-    $params[":vendor"] = "%$vendor%";
-}
+
 
 // Sorting logic
 $sql .= " ORDER BY $order";
@@ -145,5 +146,5 @@ $table = [
 </div>
 
 <?php
-require_once(__DIR__ . "/../../partials/flash.php");
+require_once(__DIR__ . "/../../../partials/flash.php");
 ?>
