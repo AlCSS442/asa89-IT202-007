@@ -11,7 +11,7 @@ $cveId = se($_GET, "cveId", "", false); // Get the CVE ID from the URL parameter
 // Check if a CVE ID is provided
 if (empty($cveId)) {
     flash("CVE ID is required to delete the record.");
-    die("list_cve.php"); // Redirect back to the list page
+    die(header("Location: $BASE_PATH" . "/basic_list_page.php")); // Redirect back to the list page
 }
 
 // Delete the record from the database
